@@ -1,0 +1,102 @@
+[
+  {
+    "id": 1,
+    "emoji": "😀",
+    "name": "Grinning Face"
+  },
+  {
+    "id": 2,
+    "emoji": "🐶",
+    "name": "Dog Face"
+  },
+  {
+    "id": 3,
+    "emoji": "🍎",
+    "name": "Red Apple"
+  },
+  {
+    "id": 4,
+    "emoji": "⚽",
+    "name": "Soccer Ball"
+  },
+  {
+    "id": 5,
+    "emoji": "🚗",
+    "name": "Car"
+  },
+  {
+    "id": 6,
+    "emoji": "🌟",
+    "name": "Glowing Star"
+  },
+  {
+    "id": 7,
+    "emoji": "🎵",
+    "name": "Musical Note"
+  },
+  {
+    "id": 8,
+    "emoji": "📚",
+    "name": "Books"
+  },
+  {
+    "id": 9,
+    "emoji": "🔥",
+    "name": "Fire"
+  },
+  {
+    "id": 10,
+    "emoji": "🎉",
+    "name": "Party Popper"
+  },
+  {
+    "id": 11,
+    "emoji": "🌈",
+    "name": "Rainbow"
+  },
+  {
+    "id": 12,
+    "emoji": "🍕",
+    "name": "Pizza"
+  },
+  {
+    "id": 13,
+    "emoji": "🎂",
+    "name": "Birthday Cake"
+  },
+  {
+    "id": 14,
+    "emoji": "✈️",
+    "name": "Airplane"
+  },
+  {
+    "id": 15,
+    "emoji": "🏀",
+    "name": "Basketball"
+  },
+  {
+    "id": 16,
+    "emoji": "🎸",
+    "name": "Guitar"
+  },
+  {
+    "id": 17,
+    "emoji": "🐱",
+    "name": "Cat Face"
+  },
+  {
+    "id": 18,
+    "emoji": "🌻",
+    "name": "Sunflower"
+  },
+  {
+    "id": 19,
+    "emoji": "🍩",
+    "name": "Doughnut"
+  },
+  {
+    "id": 20,
+    "emoji": "🚀",
+    "name": "Rocket"
+  }
+]
