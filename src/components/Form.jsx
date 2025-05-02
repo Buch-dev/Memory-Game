@@ -12,9 +12,10 @@ function Form({ handleSubmit }) {
   };
 
   return (
-    <form
+    <div className="bg-[#152938] min-h-screen">
+      <form
       onSubmit={onSubmit}
-      className="bg-[#152938] pt-20 px-6 pb-[116px] flex flex-col items-center gap-[45px] md:pt-[169px] md:px-[57px] md:pb-[168px] md:gap-[78px] lg:pt-[154px] lg:pb-[183px]"
+      className=" pt-20 px-6 pb-[116px] flex flex-col items-center gap-[45px] md:pt-[169px] md:px-[57px] md:pb-[168px] md:gap-[78px] lg:pt-[154px] lg:pb-[183px]"
     >
       <h2 className="text-[#FCFCFC] text-[32px] font-bold md:text-[40px]">
         memory
@@ -101,6 +102,7 @@ function Form({ handleSubmit }) {
         />
       </div>
     </form>
+    </div>
   );
 }
 

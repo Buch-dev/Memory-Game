@@ -8,7 +8,7 @@ function App() {
   const [formData, setFormData] = useState({
     theme: "icons", // Default to "icons"
     numberOfPlayers: 1, // Default to 1 player
-    gridSize: "4x4", // Default to 4x4 grid
+    gridSize: "6x6", // Default to 4x4 grid
   });
 
   const handleFormSubmit = (data) => {

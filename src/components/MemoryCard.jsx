@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faDog,
@@ -31,15 +31,48 @@ import {
   faEyeDropper,
 } from "@fortawesome/free-solid-svg-icons";
 import RegularButton from "./RegularButton";
+import "../App.css"; // Import your CSS file
+import GameOverModal from "./GameOverModal";
+import MenuModal from "./MenuModal";
+import TimeMoves from "./TimeMoves";
 
-function MemoryCard({ handleClick, choice, gridSize, numberOfPlayers, handleRestart }) {
-  const [flippedCards, setFlippedCards] = React.useState([]);
+function MemoryCard({
+  handleClick,
+  choice,
+  gridSize,
+  numberOfPlayers,
+  handleRestart,
+}) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [time, setTime] = useState(0); // Timer state in seconds
+  const [flippedCards, setFlippedCards] = useState([]); // Track flipped cards
+  const [matchedCards, setMatchedCards] = useState([]); // Track matched cards
+  const [moves, setMoves] = useState(0); // Track moves
+  const [isGameOver, setIsGameOver] = useState(false); // Track game over state
 
-  const handleCardClick = (index) => {
-    setFlippedCards((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
-    );
-    handleClick(index);
+  // Timer logic
+  useEffect(() => {
+    let timer;
+    if (!isGameOver) {
+      timer = setInterval(() => {
+        setTime((prevTime) => prevTime + 1);
+      }, 1000);
+    }
+
+    return () => clearInterval(timer); // Cleanup interval on component unmount or when isGameOver changes
+  }, [isGameOver]);
+
+  const handleMenuClick = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleNewGame = () => {
+    handleRestart(); // Reset the game
+    setIsModalOpen(false); // Close the modal
   };
 
   // Array of Font Awesome icons
@@ -75,84 +108,176 @@ function MemoryCard({ handleClick, choice, gridSize, numberOfPlayers, handleRest
   ];
 
   // Array of numbers
-  const numberArray = Array.from({ length: 16 }, (_, i) => i + 1); // [1, 2, 3, ..., 16]
+  const numberArray = Array.from({ length: 36 }, (_, i) => i + 1); // [1, 2, 3, ..., 36]
 
-  // Shuffle and pick 8 unique items based on the user's choice
-  const shuffledItems =
-    choice === "icons"
-      ? fontAwesomeIcons.sort(() => Math.random() - 0.5).slice(0, 8)
-      : numberArray.sort(() => Math.random() - 0.5).slice(0, 8);
+  // Determine the number of unique items based on grid size
+  const uniqueItemsCount = gridSize === "4x4" ? 8 : 18;
 
-  // Duplicate the items and shuffle again for the memory game
-  const memoryItems = [...shuffledItems, ...shuffledItems].sort(
-    () => Math.random() - 0.5
-  );
+  // Memoize shuffled items to prevent re-shuffling on every render
+  const shuffledItems = useMemo(() => {
+    const items =
+      choice === "icons"
+        ? fontAwesomeIcons
+            .sort(() => Math.random() - 0.5)
+            .slice(0, uniqueItemsCount)
+        : numberArray
+            .sort(() => Math.random() - 0.5)
+            .slice(0, uniqueItemsCount);
+
+    return [...items, ...items].sort(() => Math.random() - 0.5); // Duplicate and shuffle
+  }, [choice, gridSize]);
+
+  // Check if the game is over
+  useEffect(() => {
+    if (matchedCards.length === shuffledItems.length) {
+      setIsGameOver(true); // Set game over state
+    }
+  }, [matchedCards, shuffledItems]);
+
+  // Handle card click
+  const handleCardClick = (index) => {
+    if (flippedCards.length === 2 || matchedCards.includes(index)) {
+      return; // Prevent flipping more than two cards or flipping already matched cards
+    }
+
+    const newFlippedCards = [...flippedCards, index];
+    setFlippedCards(newFlippedCards);
+
+    if (newFlippedCards.length === 2) {
+      setMoves((prevMoves) => prevMoves + 1); // Increment moves
+      // Check for a match
+      const [firstIndex, secondIndex] = newFlippedCards;
+      if (shuffledItems[firstIndex] === shuffledItems[secondIndex]) {
+        // Cards match
+        setMatchedCards((prevMatched) => [
+          ...prevMatched,
+          firstIndex,
+          secondIndex,
+        ]);
+      }
+
+      // Flip cards back after a short delay if they don't match
+      setTimeout(() => {
+        setFlippedCards([]);
+      }, 1000);
+    }
+  };
 
   // Render memory cards
-  const memoryCards = memoryItems.map((item, index) => (
+  const memoryCards = shuffledItems.map((item, index) => (
     <li
       key={index}
-      className="w-[72.53px] h-[72.53px] rounded-full flex items-center justify-center text-2xl bg-[#BCCED9] text-[#FCFCFC] text-[40px] font-bold cursor-pointer hover:bg-[#FDA214] transition duration-300 ease-in-out transform hover:scale-105"
+      className={`${
+        gridSize === "4x4"
+          ? "w-[72.53px] h-[72.53px] text-2xl md:w-[118px] md:h-[118px]" // Classes for 4x4 grid
+          : "w-[46.876px] h-[46.876px] md:w-[82px] md:h-[82px]" // Classes for 6x6 grid
+      } rounded-full flex items-center justify-center bg-[#304859] text-[#FCFCFC] text-[40px] font-bold cursor-pointer hover:bg-[#FDA214] transition duration-300 ease-in-out transform hover:scale-105 ${
+        matchedCards.includes(index)
+          ? "bg-[#BCCED9]" // Background color for matched cards
+          : flippedCards.includes(index)
+          ? "bg-[#FDA214]"
+          : "bg-[#152938]"
+      }`}
+      onClick={() => handleCardClick(index)}
     >
-      <button>
-        {choice === "icons" ? (
-          <FontAwesomeIcon icon={item} />
-        ) : (
-          <span>{item}</span>
-        )}
+      <button className="flex items-center justify-center w-full h-full">
+        {/* Render Font Awesome icon or number based on choice */}
+        {flippedCards.includes(index) || matchedCards.includes(index) ? (
+          choice === "icons" ? (
+            <FontAwesomeIcon
+              className={`${gridSize === "6x6" ? "text-2xl" : ""}`}
+              icon={item}
+            />
+          ) : (
+            <span>{item}</span>
+          )
+        ) : null}
       </button>
     </li>
   ));
 
-  // Use gridSize and choice to adjust the game logic
-  const gridClass = gridSize === "4x4" ? "grid-cols-4" : "grid-cols-6";
+  // Use gridSize to adjust the grid layout
+  const gridClass =
+    gridSize === "4x4"
+      ? "grid-cols-4 gap-[12.29px] md:gap-5 md:max-w-[532px] mx-auto"
+      : "grid-cols-6 gap-[9.12px] md:gap-4 md:max-w-[532px] mx-auto";
+
+  // Format time in MM:SS
+  const formatTime = (time) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = time % 60;
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
+      2,
+      "0"
+    )}`;
+  };
 
   return (
-    <div className="p-6">
+    <div className="p-6 md:pt-[37px] md:pl-[39px] md:pb-12 md:pr-10">
       {/* Logo and Menu */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-[#152938]">memory</h2>
+        <h2 className="text-2xl font-bold text-[#152938] md:text-[40px]">
+          memory
+        </h2>
+
+        {/* Menu Button for Mobile */}
         <RegularButton
+          onClick={handleMenuClick}
           children={"Menu"}
           className={
-            "w-[78px] h-10 rounded-[26px] text-base bg-[#FDA214] text-[#FCFCFC] font-bold"
-          }
+            "w-[78px] h-10 rounded-[26px] text-base bg-[#FDA214] text-[#FCFCFC] font-bold md:hidden"
+          } // Hidden on tablet and larger screens
         />
+
+        {/* Restart and New Game Buttons for Tablet and Larger Screens */}
+        <div className="hidden md:flex gap-4">
+          <RegularButton
+            onClick={handleRestart}
+            children={"Restart"}
+            className={
+              "w-[127px] h-[52px] rounded-[26px] text-xl bg-[#FDA214] text-[#FCFCFC] font-bold hover:bg-[#FFB84A]"
+            }
+          />
+          <RegularButton
+            onClick={handleNewGame}
+            children={"New Game"}
+            className={
+              "w-[149px] h-[52px] rounded-[26px] text-xl bg-[#DFE7EC] text-[#304859] font-bold hover:bg-[#506D8B] hover:text-[#FCFCFC]"
+            }
+          />
+        </div>
       </div>
-      <button onClick={handleRestart}>Restart</button>
+
+      {/* Modal for Game Over */}
+      {isGameOver && (
+        <GameOverModal
+          formatTime={formatTime}
+          time={time}
+          moves={moves || 0}
+          handleRestart={handleRestart}
+          handleNewGame={handleNewGame}
+        />
+      )}
+
+      {/* Modal */}
+      {isModalOpen && (
+        <MenuModal
+          handleCloseModal={handleCloseModal}
+          handleNewGame={handleNewGame}
+          handleRestart={handleRestart}
+        />
+      )}
+
       {/* Memory Game Section */}
       <ul
-        className={`grid ${gridClass} gap-[12.29px] justify-items-center mt-20`}
+        className={`grid ${gridClass} justify-items-center mt-20`}
         onClick={handleClick}
       >
         {memoryCards}
       </ul>
 
       {/* Time and Moves */}
-      <div className="flex items-center justify-between mt-[102px]">
-        <div className="flex flex-col items-center justify-center w-[151px] h-[70px] rounded-[5px] bg-[#DFE7EC]">
-          <label
-            htmlFor="time"
-            className="text-[15px] text-[#7191A5] font-bold"
-          >
-            Time
-          </label>
-          <h3 id="time" className="text-2xl text-[#304859] font-bold">
-            1:53
-          </h3>
-        </div>
-        <div className="flex flex-col items-center justify-center w-[151px] h-[70px] rounded-[5px] bg-[#DFE7EC]">
-          <label
-            htmlFor="time"
-            className="text-[15px] text-[#7191A5] font-bold"
-          >
-            Moves
-          </label>
-          <h3 id="time" className="text-2xl text-[#304859] font-bold">
-            39
-          </h3>
-        </div>
-      </div>
+      <TimeMoves formatTime={formatTime} time={time} moves={moves} />
     </div>
   );
 }
