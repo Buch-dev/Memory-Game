@@ -35,6 +35,8 @@ import "../App.css"; // Import your CSS file
 import GameOverModal from "./GameOverModal";
 import MenuModal from "./MenuModal";
 import TimeMoves from "./TimeMoves";
+import PlayerInfo from "./PlayerInfo";
+import MultiplayerGameOverModal from "./MultiplayerGameOverModal";
 
 function MemoryCard({
   handleClick,
@@ -49,6 +51,16 @@ function MemoryCard({
   const [matchedCards, setMatchedCards] = useState([]); // Track matched cards
   const [moves, setMoves] = useState(0); // Track moves
   const [isGameOver, setIsGameOver] = useState(false); // Track game over state
+  const [currentPlayer, setCurrentPlayer] = useState(0); // Track the current player's turn
+  const [scores, setScores] = useState(
+    Array(numberOfPlayers).fill(0) // Initialize scores for all players
+  );
+
+  // Sound
+  const playSound = () => {
+    const audio = new Audio('/audio/sound.wav')
+    audio.play()
+  }
 
   // Timer logic
   useEffect(() => {
@@ -73,6 +85,16 @@ function MemoryCard({
   const handleNewGame = () => {
     handleRestart(); // Reset the game
     setIsModalOpen(false); // Close the modal
+  };
+
+  // Restart game logic
+  const restartGame = () => {
+    setFlippedCards([]);
+    setMatchedCards([]);
+    setScores(Array(numberOfPlayers).fill(0));
+    setCurrentPlayer(0);
+    setIsGameOver(false);
+    setIsModalOpen(false)
   };
 
   // Array of Font Awesome icons
@@ -145,8 +167,8 @@ function MemoryCard({
 
     if (newFlippedCards.length === 2) {
       setMoves((prevMoves) => prevMoves + 1); // Increment moves
-      // Check for a match
       const [firstIndex, secondIndex] = newFlippedCards;
+
       if (shuffledItems[firstIndex] === shuffledItems[secondIndex]) {
         // Cards match
         setMatchedCards((prevMatched) => [
@@ -154,6 +176,18 @@ function MemoryCard({
           firstIndex,
           secondIndex,
         ]);
+
+        // Update the current player's score
+        setScores((prevScores) => {
+          const newScores = [...prevScores];
+          newScores[currentPlayer] += 1;
+          return newScores;
+        });
+      } else {
+        // Switch to the next player after a short delay
+        setTimeout(() => {
+          setCurrentPlayer((prevPlayer) => (prevPlayer + 1) % numberOfPlayers);
+        }, 1000);
       }
 
       // Flip cards back after a short delay if they don't match
@@ -232,7 +266,7 @@ function MemoryCard({
         {/* Restart and New Game Buttons for Tablet and Larger Screens */}
         <div className="hidden md:flex gap-4">
           <RegularButton
-            onClick={handleRestart}
+            onClick={restartGame}
             children={"Restart"}
             className={
               "w-[127px] h-[52px] rounded-[26px] text-xl bg-[#FDA214] text-[#FCFCFC] font-bold hover:bg-[#FFB84A]"
@@ -249,12 +283,19 @@ function MemoryCard({
       </div>
 
       {/* Modal for Game Over */}
-      {isGameOver && (
+      {isGameOver && numberOfPlayers === 1 && (
         <GameOverModal
           formatTime={formatTime}
           time={time}
           moves={moves || 0}
-          handleRestart={handleRestart}
+          handleRestart={restartGame}
+          handleNewGame={handleNewGame}
+        />
+      )}
+      {isGameOver && numberOfPlayers > 1 && (
+        <MultiplayerGameOverModal
+          scores={scores}
+          handleRestart={restartGame}
           handleNewGame={handleNewGame}
         />
       )}
@@ -264,7 +305,7 @@ function MemoryCard({
         <MenuModal
           handleCloseModal={handleCloseModal}
           handleNewGame={handleNewGame}
-          handleRestart={handleRestart}
+          handleRestart={restartGame}
         />
       )}
 
@@ -277,7 +318,16 @@ function MemoryCard({
       </ul>
 
       {/* Time and Moves */}
-      <TimeMoves formatTime={formatTime} time={time} moves={moves} />
+      {numberOfPlayers === 1 && (
+        <TimeMoves formatTime={formatTime} time={time} moves={moves} />
+      )}
+
+      {/* Player Information */}
+      <PlayerInfo
+        numberOfPlayers={numberOfPlayers}
+        currentPlayer={currentPlayer}
+        scores={scores}
+      />
     </div>
   );
 }
